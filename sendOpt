@@ -1,0 +1,53 @@
+const chai = require("chai");
+const { expect } = chai;
+require("mocha");
+const request = require("supertest");
+
+describe("Send Verification", () => {
+  let tempToken, tempTokenVerifiedBefore;
+
+  beforeEach(() => {
+    tempToken =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmIyNTQ1ZWE1MTE0NDQyOWM5YzBhY2EiLCJlbWFpbCI6ImZhZHlAbWFpbHNhYy5jb20iLCJpYXQiOjE2MDU1MjI1MjYsImV4cCI6MTYwNTUyNjEyNn0.3KQq9gyjKkbm_8lUAccr9GGulgEWgjROnNME9Y5Ir4Q";
+
+    tempTokenVerifiedBefore =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmIyNTM1M2MwMTljMTA3OTgwYzZlZjciLCJlbWFpbCI6ImZhZHlAbWFpbHNhYy5jb20iLCJpYXQiOjE2MDU1MjIyNTksImV4cCI6MTYwNTUyNTg1OX0.1H-veZkelebwJKITiawomg9MUqUaxzNivBpL7XFyySk";
+  });
+
+  it("Without temp token", () => {
+    return request("localhost:3000/api")
+      .post("/user/requestVerificationCode")
+      .set({ authorization: "" })
+      .then((response) => {
+        expect(response.status).to.equal(401);
+        expect(response.body)
+          .to.have.property("message")
+          .to.equal("Session Expired");
+      });
+  });
+
+  it("With temp token but user verified before", () => {
+    return request("localhost:3000/api")
+      .post("/user/requestVerificationCode")
+      .set({ authorization: tempTokenVerifiedBefore })
+      .then((response) => {
+        expect(response.status).to.equal(401);
+        expect(response.body)
+          .to.have.property("message")
+          .to.equal("User is already verified");
+      });
+  });
+
+  it("With temp token", () => {
+    return request("localhost:3000/api")
+      .post("/user/requestVerificationCode")
+      .set({ authorization: tempToken })
+      .then((response) => {
+        expect(response.status).to.equal(200);
+        expect(response.body)
+          .to.have.property("message")
+          .to.equal("Please Check your Email");
+      });
+  });
+  
+});
